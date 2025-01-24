@@ -31,4 +31,4 @@ rm -r ./out
 
 wsl --exec avr-objdump -b ihex -m avr -D ./$example_name.hex > $example_name.s
 
-echo "Compilation and disassembly complete for example: \"$example_name\""
+echo "Compilation and disassembly completed for example: \"$example_name\""
