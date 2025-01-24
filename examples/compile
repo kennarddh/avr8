@@ -1,0 +1,34 @@
+#!/bin/bash
+set -e
+
+example_name="$1"
+
+if [ -z "$example_name" ]; then
+  echo "Usage: $0 <example_name>"
+  echo "  Example: $0 blink"
+
+  exit 1
+fi
+
+example_directory="$(dirname "$0")/$example_name"
+
+if ! [ -d $example_directory ]; then
+  echo "Example \"$example_name\" not found"
+
+  exit 1
+fi
+
+cd $example_directory
+
+echo "Compiling example: \"$example_name\""
+echo "Directory: $example_directory"
+
+arduino-cli compile -b arduino:avr:uno --output-dir ./out/
+
+cp ./out/$example_name.ino.hex ./$example_name.hex
+
+rm -r ./out
+
+wsl --exec avr-objdump -b ihex -m avr -D ./$example_name.hex > $example_name.s
+
+echo "Compilation and disassembly complete for example: \"$example_name\""
