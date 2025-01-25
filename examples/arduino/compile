@@ -29,6 +29,6 @@ cp ./out/$example_name.ino.hex ./$example_name.hex
 
 rm -r ./out
 
-wsl --exec avr-objdump -b ihex -m avr -D ./$example_name.hex > $example_name.s
+wsl --exec avr-objdump -b ihex -m avr -D ./$example_name.hex > $example_name.S
 
 echo "Compilation and disassembly completed for example: \"$example_name\""

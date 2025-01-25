@@ -1,0 +1,35 @@
+#!/bin/bash
+set -e
+
+example_name="$1"
+
+if [ -z "$example_name" ]; then
+  echo "Usage: $0 <example_name>"
+  echo "  Example: $0 blink"
+
+  exit 1
+fi
+
+example_directory="$(dirname "$0")/$example_name"
+
+if ! [ -d $example_directory ]; then
+  echo "Example \"$example_name\" not found"
+
+  exit 1
+fi
+
+cd $example_directory
+
+echo "Assembling example: \"$example_name\""
+echo "Directory: $example_directory"
+
+# https://stackoverflow.com/questions/77347544/avr-creating-and-understanding-minimum-startup-code-and-linker-scripts-from-scr
+# https://github.com/benwattsjones/AVR-Microcontroller-Tutorial/tree/master/L1%3A%20Setup%20and%20LED%20on
+
+wsl --exec avr-gcc -mmcu=atmega328p -Os -g -Wall -Wextra -nostdlib -o output.elf $example_name.S
+wsl --exec avr-objcopy -O ihex -R .eeprom output.elf $example_name.hex
+wsl --exec avr-objdump -b ihex -m avr -D $example_name.hex > disassembly_$example_name.S
+
+rm output.elf
+
+echo "Assembly completed for example: \"$example_name\""
