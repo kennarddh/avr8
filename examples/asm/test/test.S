@@ -4,9 +4,9 @@
 .global main
 
 main:
-    sbi io(DDRB), 5  ; set PB5 as output
-    sbi io(PINB), 5  ; toggle PB5
+	ldi r16, 1
+	ldi r17, 2
+	adc r16, r17
 
 _end:
-	adc r1,r2
     rjmp _end ; hang forever

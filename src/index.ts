@@ -18,6 +18,8 @@ class CPU {
 	public programCounter = 0
 	public cycles = 0
 
+	private readonly statusRegisterAddress = 0x5f
+
 	constructor(flashData: Uint8Array) {
 		// Load the 'flashData' at the beginning
 		this.flash.set(flashData, 0)
@@ -37,13 +39,11 @@ class CPU {
 	}
 
 	get statusRegister() {
-		// SREG: 0x5F. 8 bit.
-		return this.sramDataView.getUint16(0x5f, true)
+		return this.sramDataView.getUint8(this.statusRegisterAddress)
 	}
 
 	set statusRegister(value) {
-		// SREG: 0x5F. 8 bit.
-		this.sramDataView.setUint16(0x5f, value, true)
+		this.sramDataView.setUint8(this.statusRegisterAddress, value)
 	}
 
 	public executeInstruction() {
@@ -53,24 +53,84 @@ class CPU {
 		console.log('Instruction', this.programCounter, opcode.toString(2).padStart(12, '0'))
 
 		if ((opcode & 0b1111110000000000) >> 10 === 0b000111) {
-			// ADC
+			// ADC, 0001 11rd dddd rrrr
 			console.log('ADC')
+
+			const registerD = (opcode & 0b0000000111110000) >> 4
+			const registerR = ((opcode & 0b0000001000000000) >> 5) | (opcode & 0b0000000000001111)
+
+			const Rd = this.sramDataView.getUint8(registerD)
+			const Rr = this.sramDataView.getUint8(registerR)
+
+			const sum = Rd + Rr + (this.statusRegister & 0b00000001) // Carry status bit
+
+			// 8 bit overflow
+			const R = sum & 255
+
+			this.sramDataView.setUint8(registerD, R)
+
+			// Set the status register
+
+			const Rd3 = (Rd & (1 << 2)) >> 2
+			const Rr3 = (Rr & (1 << 2)) >> 2
+			const R3 = (R & (1 << 2)) >> 2
+
+			const Rd7 = (Rd & (1 << 6)) >> 6
+			const Rr7 = (Rr & (1 << 6)) >> 6
+			const R7 = (R & (1 << 6)) >> 6
+
+			const cBit = (Rd7 & Rr7) | (Rr7 & Number(!R7)) | (Number(!R7) & Rd7)
+			const zBit = Number(R === 0)
+			const nBit = R7
+			const vBit = (Rd7 & Rr7 & Number(!R7)) | (Number(!Rd7) & Number(!Rr7) & R7)
+			const sBit = nBit ^ vBit
+			const hBit = (Rd3 & Rr3) | (Rr3 & Number(!R3)) | (Number(!R3) & Rd3)
+
+			this.statusRegister &= 0b11000000 // Clear bits that are going to be set
+			this.statusRegister |= cBit
+			this.statusRegister |= zBit << 1
+			this.statusRegister |= nBit << 2
+			this.statusRegister |= vBit << 3
+			this.statusRegister |= sBit << 4
+			this.statusRegister |= hBit << 5
 
 			this.programCounter += 2
 			this.cycles += 1
 		} else if ((opcode & 0b1111111100000000) >> 8 === 0b10011010) {
-			// SBI, 1001 1010 AAAA Abbb. 2 cycles.
+			// SBI, 1001 1010 AAAA Abbb
 			console.log('SBI')
+
+			const registerA = (opcode & 0b0000000011111000) >> 3
+			const b = opcode & 0b0000000000000111
+
+			// Add 32 to offset general purpose registers to I/O space.
+			const address = registerA + 32
+
+			this.sramDataView.setUint8(address, this.sramDataView.getUint8(address) | (1 << b))
 
 			this.programCounter += 2
 			this.cycles += 2
+		} else if ((opcode & 0b1111000000000000) >> 12 === 0b1110) {
+			// LDI, 1110 KKKK dddd KKKK
+			console.log('LDI')
+
+			const registerD = (opcode & 0b0000000011110000) >> 4
+			const k = ((opcode & 0b0000111100000000) >> 4) | (opcode & 0b0000000000001111)
+
+			// Add 16 because LDI can only load into the last 16 general purpose registers.
+			const address = registerD + 16
+
+			this.sramDataView.setUint8(address, k)
+
+			this.programCounter += 2
+			this.cycles += 1
 		} else if ((opcode & 0b1111000000000000) >> 12 === 0b1100) {
-			// RJMP, 1100 kkkk kkkk kkkk. 2 cycles.
+			// RJMP, 1100 kkkk kkkk kkkk
 			console.log('RJMP')
 
 			const offset12bit = opcode & 0b0000111111111111
 
-			// Bitwise Sign Extension. Convert unsigned into signed.
+			// Bitwise sign extension. Convert unsigned into signed.
 			const offsetSigned = (offset12bit << 20) >> 20
 
 			this.programCounter += offsetSigned * 2 + 2
@@ -88,7 +148,9 @@ const { data } = intelHex.parse(exampleHex)
 
 const cpu = new CPU(data)
 
-for (let i = 0; i < 10; i++) {
+for (let i = 0; i < 4; i++) {
 	console.log(`Cycle ${cpu.cycles}`)
 	cpu.executeInstruction()
 }
+
+console.log(cpu.sram.slice(0, 32))
