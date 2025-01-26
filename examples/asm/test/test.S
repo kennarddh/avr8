@@ -7,6 +7,3 @@ main:
 	ldi r16, 1
 	ldi r17, 2
 	adc r16, r17
-
-_end:
-    rjmp _end ; hang forever

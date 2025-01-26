@@ -52,6 +52,8 @@ class CPU {
 
 		console.log('Instruction', this.programCounter, opcode.toString(2).padStart(12, '0'))
 
+		// Arithmetic and Logic Instructions
+		// ADD
 		if ((opcode & 0b1111110000000000) >> 10 === 0b000111) {
 			// ADC, 0001 11rd dddd rrrr
 			console.log('ADC')
@@ -96,7 +98,88 @@ class CPU {
 
 			this.programCounter += 2
 			this.cycles += 1
-		} else if ((opcode & 0b1111111100000000) >> 8 === 0b10011010) {
+		}
+		// ADIW
+		// SUB
+		// SUBI
+		// SBC
+		// SBCI
+		// SBIW
+		// AND
+		// ANDI
+		// OR
+		// ORI
+		// EOR
+		// COM
+		// NEG
+		// SBR
+		// CBR
+		// INC
+		// DEC
+		// TST
+		// CLR
+		// SER
+		// MUL
+		// MULS
+		// MULSU
+		// FMUL
+		// FMULS
+		// FMULSU
+
+		// Branch Instructions
+		else if ((opcode & 0b1111000000000000) >> 12 === 0b1100) {
+			// RJMP, 1100 kkkk kkkk kkkk
+			console.log('RJMP')
+
+			const offset12bit = opcode & 0b0000111111111111
+
+			// Bitwise sign extension. Convert unsigned into signed.
+			const offsetSigned = (offset12bit << 20) >> 20
+
+			this.programCounter += offsetSigned * 2 + 2
+
+			this.cycles += 2
+		}
+		// IJMP
+		// JMP
+		// RCALL
+		// ICALL
+		// CALL
+		// RET
+		// RETI
+		// CPSE
+		// CP
+		// CPC
+		// CPI
+		// SBRC
+		// SBRS
+		// SBIC
+		// SBIS
+		// BRBS
+		// BRBC
+		// BREQ
+		// BRNE
+		// BRCS
+		// BRCC
+		// BRSH
+		// BRLO
+		// BRMI
+		// BRPL
+		// BRGE
+		// BRLT
+		// BRHS
+		// BRHC
+		// BRTS
+		// BRTC
+		// BRVS
+		// BRVC
+		// BRIE
+		// BRID
+		// EIJMP
+		// EICALL
+
+		// Bit and Bit-Test Instructions
+		else if ((opcode & 0b1111111100000000) >> 8 === 0b10011010) {
 			// SBI, 1001 1010 AAAA Abbb
 			console.log('SBI')
 
@@ -110,7 +193,39 @@ class CPU {
 
 			this.programCounter += 2
 			this.cycles += 2
-		} else if ((opcode & 0b1111000000000000) >> 12 === 0b1110) {
+		}
+		// CBI
+		// LSL
+		// LSR
+		// ROL
+		// ROR
+		// ASR
+		// SWAP
+		// BSET
+		// BCLR
+		// BST
+		// BLD
+		// SEC
+		// CLC
+		// SEN
+		// CLN
+		// SEZ
+		// CLZ
+		// SEI
+		// CLI
+		// SES
+		// CLS
+		// SEV
+		// CLV
+		// SET
+		// CLT
+		// SEH
+		// CLH
+
+		// Data Transfer Instructions
+		// MOV
+		// MOVW
+		else if ((opcode & 0b1111000000000000) >> 12 === 0b1110) {
 			// LDI, 1110 KKKK dddd KKKK
 			console.log('LDI')
 
@@ -124,19 +239,48 @@ class CPU {
 
 			this.programCounter += 2
 			this.cycles += 1
-		} else if ((opcode & 0b1111000000000000) >> 12 === 0b1100) {
-			// RJMP, 1100 kkkk kkkk kkkk
-			console.log('RJMP')
+		}
+		// LDI
+		// LD, X
+		// LD, X+
+		// LD, -X
+		// LD, Y
+		// LD, Y+
+		// LD, -Y
+		// LDD, Y + q
+		// LD, Z
+		// LD, Z+
+		// LD, -Z
+		// LDD, Z + q
+		// LDS
+		// ST, X
+		// ST, X+
+		// ST, -X
+		// ST, Y
+		// ST, Y+
+		// ST, -Y
+		// STD, Y + q
+		// ST, Z
+		// ST, Z+
+		// ST, -Z
+		// STD, Z + q
+		// STS
+		// LPM
+		// LPM, Z
+		// LPM, Z+
+		// SPM
+		// IN
+		// OUT
+		// PUSH
+		// POP
+		// ELPM
 
-			const offset12bit = opcode & 0b0000111111111111
-
-			// Bitwise sign extension. Convert unsigned into signed.
-			const offsetSigned = (offset12bit << 20) >> 20
-
-			this.programCounter += offsetSigned * 2 + 2
-
-			this.cycles += 2
-		} else {
+		// MCU Control Instructions
+		// NOP
+		// SLEEP
+		// WDR
+		// BREAK
+		else {
 			console.log('Unknown opcode', opcode.toString(2).padStart(16, '0'))
 		}
 	}
