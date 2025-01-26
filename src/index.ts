@@ -46,6 +46,31 @@ class CPU {
 		this.sramDataView.setUint8(this.statusRegisterAddress, value)
 	}
 
+	private setAritheticStatusRegisterBits(Rd: number, Rr: number, R: number) {
+		const Rd3 = (Rd & (1 << 3)) >> 3
+		const Rr3 = (Rr & (1 << 3)) >> 3
+		const R3 = (R & (1 << 3)) >> 3
+
+		const Rd7 = (Rd & (1 << 7)) >> 7
+		const Rr7 = (Rr & (1 << 7)) >> 7
+		const R7 = (R & (1 << 7)) >> 7
+
+		const cBit = (Rd7 & Rr7) | (Rr7 & ~R7) | (~R7 & Rd7)
+		const zBit = Number(R === 0)
+		const nBit = R7
+		const vBit = (Rd7 & Rr7 & ~R7) | (~Rd7 & ~Rr7 & R7)
+		const sBit = nBit ^ vBit
+		const hBit = (Rd3 & Rr3) | (Rr3 & ~R3) | (~R3 & Rd3)
+
+		this.statusRegister &= 0b11000000 // Clear bits that are going to be set
+		this.statusRegister |= cBit
+		this.statusRegister |= zBit << 1
+		this.statusRegister |= nBit << 2
+		this.statusRegister |= vBit << 3
+		this.statusRegister |= sBit << 4
+		this.statusRegister |= hBit << 5
+	}
+
 	public executeInstruction() {
 		// Each instruction is either 16 bit or 32 bit.
 		const opcode = this.flashDataView.getUint16(this.programCounter, true)
@@ -53,8 +78,26 @@ class CPU {
 		console.log('Instruction', this.programCounter, opcode.toString(2).padStart(12, '0'))
 
 		// Arithmetic and Logic Instructions
-		// ADD
-		if ((opcode & 0b1111110000000000) >> 10 === 0b000111) {
+		if ((opcode & 0b1111110000000000) >> 10 === 0b000011) {
+			// ADD, 0000 11rd dddd rrrr
+			console.log('ADD')
+
+			const registerD = (opcode & 0b0000000111110000) >> 4
+			const registerR = ((opcode & 0b0000001000000000) >> 5) | (opcode & 0b0000000000001111)
+
+			const Rd = this.sramDataView.getUint8(registerD)
+			const Rr = this.sramDataView.getUint8(registerR)
+
+			const sum = Rd + Rr
+			const R = sum & 255 // 8 bit overflow
+
+			this.sramDataView.setUint8(registerD, R)
+
+			this.setAritheticStatusRegisterBits(Rd, Rr, R)
+
+			this.programCounter += 2
+			this.cycles += 1
+		} else if ((opcode & 0b1111110000000000) >> 10 === 0b000111) {
 			// ADC, 0001 11rd dddd rrrr
 			console.log('ADC')
 
@@ -65,41 +108,50 @@ class CPU {
 			const Rr = this.sramDataView.getUint8(registerR)
 
 			const sum = Rd + Rr + (this.statusRegister & 0b00000001) // Carry status bit
-
-			// 8 bit overflow
-			const R = sum & 255
+			const R = sum & 255 // 8 bit overflow
 
 			this.sramDataView.setUint8(registerD, R)
 
-			// Set the status register
+			this.setAritheticStatusRegisterBits(Rd, Rr, R)
 
-			const Rd3 = (Rd & (1 << 2)) >> 2
-			const Rr3 = (Rr & (1 << 2)) >> 2
-			const R3 = (R & (1 << 2)) >> 2
+			this.programCounter += 2
+			this.cycles += 1
+		} else if ((opcode & 0b1111111100000000) >> 8 === 0b10010110) {
+			// ADIW, 1001 0110 KKdd KKKK
+			console.log('ADIW')
 
-			const Rd7 = (Rd & (1 << 6)) >> 6
-			const Rr7 = (Rr & (1 << 6)) >> 6
-			const R7 = (R & (1 << 6)) >> 6
+			const d = (opcode & 0b0000000000110000) >> 4
+			const K = ((opcode & 0b0000000011000000) >> 2) | (opcode & 0b0000000000001111)
 
-			const cBit = (Rd7 & Rr7) | (Rr7 & Number(!R7)) | (Number(!R7) & Rd7)
+			const address = d * 2 + 24
+
+			const value = this.sramDataView.getUint16(address, true)
+
+			const sum = value + K
+			const R = sum & 0xffff // 16 bit overflow
+
+			this.sramDataView.setUint16(address, R, true)
+
+			// Set status register bits
+			const R15 = (R & (1 << 15)) >> 15
+			const Rdh7 = (value & (1 << 15)) >> 15 // 7th bit (counting from) of high byte means 15th bit of 16 bit value or the last/sign bit.
+
+			const cBit = ~R15 & Rdh7
 			const zBit = Number(R === 0)
-			const nBit = R7
-			const vBit = (Rd7 & Rr7 & Number(!R7)) | (Number(!Rd7) & Number(!Rr7) & R7)
+			const nBit = R15
+			const vBit = ~Rdh7 & R15
 			const sBit = nBit ^ vBit
-			const hBit = (Rd3 & Rr3) | (Rr3 & Number(!R3)) | (Number(!R3) & Rd3)
 
-			this.statusRegister &= 0b11000000 // Clear bits that are going to be set
+			this.statusRegister &= 0b11100000 // Clear bits that are going to be set
 			this.statusRegister |= cBit
 			this.statusRegister |= zBit << 1
 			this.statusRegister |= nBit << 2
 			this.statusRegister |= vBit << 3
 			this.statusRegister |= sBit << 4
-			this.statusRegister |= hBit << 5
 
 			this.programCounter += 2
-			this.cycles += 1
+			this.cycles += 2
 		}
-		// ADIW
 		// SUB
 		// SUBI
 		// SBC
@@ -282,9 +334,12 @@ class CPU {
 		// BREAK
 		else {
 			console.log('Unknown opcode', opcode.toString(2).padStart(16, '0'))
+
+			this.programCounter += 2
+			this.cycles += 1
 		}
 
-		this.programCounter %= this.flashData.length
+		this.programCounter %= this.flash.length
 	}
 }
 
@@ -294,7 +349,7 @@ const { data } = intelHex.parse(exampleHex)
 
 const cpu = new CPU(data)
 
-for (let i = 0; i < 4; i++) {
+for (let i = 0; i < 10000; i++) {
 	console.log(`Cycle ${cpu.cycles}`)
 	cpu.executeInstruction()
 }
