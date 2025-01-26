@@ -20,7 +20,7 @@ class CPU {
 
 	private readonly statusRegisterAddress = 0x5f
 
-	constructor(flashData: Uint8Array) {
+	constructor(public flashData: Uint8Array) {
 		// Load the 'flashData' at the beginning
 		this.flash.set(flashData, 0)
 
@@ -283,6 +283,8 @@ class CPU {
 		else {
 			console.log('Unknown opcode', opcode.toString(2).padStart(16, '0'))
 		}
+
+		this.programCounter %= this.flashData.length
 	}
 }
 
