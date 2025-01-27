@@ -349,9 +349,10 @@ const { data } = intelHex.parse(exampleHex)
 
 const cpu = new CPU(data)
 
-for (let i = 0; i < 10000; i++) {
+for (let i = 0; i < 3; i++) {
 	console.log(`Cycle ${cpu.cycles}`)
 	cpu.executeInstruction()
 }
 
 console.log(cpu.sram.slice(0, 32))
+console.log(new Uint16Array(cpu.sram.buffer).slice(12, 16))
