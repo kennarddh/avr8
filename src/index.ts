@@ -601,9 +601,65 @@ class CPU {
 
 			this.programCounter += 2
 			this.cycles += 1
+		} else if ((opcode & 0b1111110000001111) === 0b1001010000000011) {
+			// INC, 1001 010d dddd 0011
+			console.log('INC')
+
+			const registerD = (opcode & 0b0000000111110000) >> 4
+
+			const Rd = this.sramDataView.getUint8(registerD)
+
+			const result = Rd + 1
+			const R = result & 0xff // 8 bit overflow
+
+			this.sramDataView.setUint8(registerD, R)
+
+			// Set status register bits
+			const R7 = (R & (1 << 7)) >> 7
+
+			const zBit = Number(R === 0)
+			const nBit = R7
+			const vBit = Number(Rd === 0x7f)
+			const sBit = nBit ^ vBit
+
+			this.statusRegister &= 0b11100001 // Clear bits that are going to be set
+			this.statusRegister |= zBit << 1
+			this.statusRegister |= nBit << 2
+			this.statusRegister |= vBit << 3
+			this.statusRegister |= sBit << 4
+
+			this.programCounter += 2
+			this.cycles += 1
+		} else if ((opcode & 0b1111110000001111) === 0b1001010000001010) {
+			// DEC, 1001 010d dddd 1010
+			console.log('DEC')
+
+			const registerD = (opcode & 0b0000000111110000) >> 4
+
+			const Rd = this.sramDataView.getUint8(registerD)
+
+			const result = Rd - 1
+			const R = result & 0xff // 8 bit overflow
+
+			this.sramDataView.setUint8(registerD, R)
+
+			// Set status register bits
+			const R7 = (R & (1 << 7)) >> 7
+
+			const zBit = Number(R === 0)
+			const nBit = R7
+			const vBit = Number(Rd === 0x80)
+			const sBit = nBit ^ vBit
+
+			this.statusRegister &= 0b11100001 // Clear bits that are going to be set
+			this.statusRegister |= zBit << 1
+			this.statusRegister |= nBit << 2
+			this.statusRegister |= vBit << 3
+			this.statusRegister |= sBit << 4
+
+			this.programCounter += 2
+			this.cycles += 1
 		}
-		// TODO: INC
-		// TODO: DEC
 		// TODO: MUL
 		// TODO: MULS
 		// TODO: MULSU
