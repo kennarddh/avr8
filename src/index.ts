@@ -374,23 +374,23 @@ class CPU {
 			this.programCounter += 2
 			this.cycles += 2
 		}
-		// AND
-		// ANDI
-		// OR
-		// ORI
-		// EOR
-		// COM
-		// NEG
-		// SBR
-		// CBR
-		// INC
-		// DEC
-		// MUL
-		// MULS
-		// MULSU
-		// FMUL
-		// FMULS
-		// FMULSU
+		// TODO: AND
+		// TODO: ANDI
+		// TODO: OR
+		// TODO: ORI
+		// TODO: EOR
+		// TODO: COM
+		// TODO: NEG
+		// TODO: SBR
+		// TODO: CBR
+		// TODO: INC
+		// TODO: DEC
+		// TODO: MUL
+		// TODO: MULS
+		// TODO: MULSU
+		// TODO: FMUL
+		// TODO: FMULS
+		// TODO: FMULSU
 
 		// Branch Instructions
 		else if ((opcode & 0b1111000000000000) >> 12 === 0b1100) {
@@ -405,25 +405,25 @@ class CPU {
 			this.programCounter += offsetSigned * 2 + 2
 			this.cycles += 2
 		}
-		// IJMP
-		// JMP
-		// RCALL
-		// ICALL
-		// CALL
-		// RET
-		// RETI
-		// CPSE
-		// CP
-		// CPC
-		// CPI
-		// SBRC
-		// SBRS
-		// SBIC
-		// SBIS
-		// BRBS
-		// BRBC
-		// EIJMP
-		// EICALL
+		// TODO: IJMP
+		// TODO: JMP
+		// TODO: RCALL
+		// TODO: ICALL
+		// TODO: CALL
+		// TODO: RET
+		// TODO: RETI
+		// TODO: CPSE
+		// TODO: CP
+		// TODO: CPC
+		// TODO: CPI
+		// TODO: SBRC
+		// TODO: SBRS
+		// TODO: SBIC
+		// TODO: SBIS
+		// TODO: BRBS
+		// TODO: BRBC
+		// TODO: EIJMP
+		// TODO: EICALL
 
 		// Bit and Bit-Test Instructions
 		else if ((opcode & 0b1111111100000000) >> 8 === 0b10011010) {
@@ -441,22 +441,22 @@ class CPU {
 			this.programCounter += 2
 			this.cycles += 2
 		}
-		// CBI
-		// LSL
-		// LSR
-		// ROL
-		// ROR
-		// ASR
-		// SWAP
-		// BSET
-		// BCLR
-		// BST
-		// BLD
-		// SEI
+		// TODO: CBI
+		// TODO: LSL
+		// TODO: LSR
+		// TODO: ROL
+		// TODO: ROR
+		// TODO: ASR
+		// TODO: SWAP
+		// TODO: BSET
+		// TODO: BCLR
+		// TODO: BST
+		// TODO: BLD
+		// TODO: SEI
 
 		// Data Transfer Instructions
-		// MOV
-		// MOVW
+		// TODO: MOV
+		// TODO: MOVW
 		else if ((opcode & 0b1111000000000000) >> 12 === 0b1110) {
 			// LDI, 1110 KKKK dddd KKKK
 			console.log('LDI')
@@ -472,45 +472,45 @@ class CPU {
 			this.programCounter += 2
 			this.cycles += 1
 		}
-		// LD, X
-		// LD, X+
-		// LD, -X
-		// LD, Y
-		// LD, Y+
-		// LD, -Y
-		// LDD, Y + q
-		// LD, Z
-		// LD, Z+
-		// LD, -Z
-		// LDD, Z + q
-		// LDS
-		// ST, X
-		// ST, X+
-		// ST, -X
-		// ST, Y
-		// ST, Y+
-		// ST, -Y
-		// STD, Y + q
-		// ST, Z
-		// ST, Z+
-		// ST, -Z
-		// STD, Z + q
-		// STS
-		// LPM
-		// LPM, Z
-		// LPM, Z+
-		// SPM
-		// IN
-		// OUT
-		// PUSH
-		// POP
-		// ELPM
+		// TODO: LD, X
+		// TODO: LD, X+
+		// TODO: LD, -X
+		// TODO: LD, Y
+		// TODO: LD, Y+
+		// TODO: LD, -Y
+		// TODO: LDD, Y + q
+		// TODO: LD, Z
+		// TODO: LD, Z+
+		// TODO: LD, -Z
+		// TODO: LDD, Z + q
+		// TODO: LDS
+		// TODO: ST, X
+		// TODO: ST, X+
+		// TODO: ST, -X
+		// TODO: ST, Y
+		// TODO: ST, Y+
+		// TODO: ST, -Y
+		// TODO: STD, Y + q
+		// TODO: ST, Z
+		// TODO: ST, Z+
+		// TODO: ST, -Z
+		// TODO: STD, Z + q
+		// TODO: STS
+		// TODO: LPM
+		// TODO: LPM, Z
+		// TODO: LPM, Z+
+		// TODO: SPM
+		// TODO: IN
+		// TODO: OUT
+		// TODO: PUSH
+		// TODO: POP
+		// TODO: ELPM
 
 		// MCU Control Instructions
-		// NOP
-		// SLEEP
-		// WDR
-		// BREAK
+		// TODO: NOP
+		// TODO: SLEEP
+		// TODO: WDR
+		// TODO: BREAK
 		else {
 			console.log('Unknown opcode', opcode.toString(2).padStart(16, '0'))
 
