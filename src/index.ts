@@ -64,7 +64,7 @@ class CPU {
 			const Rr = this.sramDataView.getUint8(registerR)
 
 			const sum = Rd + Rr
-			const R = sum & 255 // 8 bit overflow
+			const R = sum & 0xff // 8 bit overflow
 
 			this.sramDataView.setUint8(registerD, R)
 
@@ -105,7 +105,7 @@ class CPU {
 			const Rr = this.sramDataView.getUint8(registerR)
 
 			const sum = Rd + Rr + (this.statusRegister & 0b00000001) // Carry status bit
-			const R = sum & 255 // 8 bit overflow
+			const R = sum & 0xff // 8 bit overflow
 
 			this.sramDataView.setUint8(registerD, R)
 
@@ -181,7 +181,7 @@ class CPU {
 			const Rr = this.sramDataView.getUint8(registerR)
 
 			const result = Rd - Rr
-			const R = result & 255 // 8 bit overflow
+			const R = result & 0xff // 8 bit overflow
 
 			this.sramDataView.setUint8(registerD, R)
 
@@ -224,7 +224,7 @@ class CPU {
 			const Rd = this.sramDataView.getUint8(address)
 
 			const result = Rd - K
-			const R = result & 255 // 8 bit overflow
+			const R = result & 0xff // 8 bit overflow
 
 			this.sramDataView.setUint8(address, R)
 
@@ -265,7 +265,7 @@ class CPU {
 			const Rr = this.sramDataView.getUint8(registerR)
 
 			const result = Rd - Rr - (this.statusRegister & 0b00000001) // Carry status bit
-			const R = result & 255 // 8 bit overflow
+			const R = result & 0xff // 8 bit overflow
 
 			this.sramDataView.setUint8(registerD, R)
 
@@ -308,7 +308,7 @@ class CPU {
 			const Rd = this.sramDataView.getUint8(address)
 
 			const result = Rd - K - (this.statusRegister & 0b00000001) // Carry status bit
-			const R = result & 255 // 8 bit overflow
+			const R = result & 0xff // 8 bit overflow
 
 			this.sramDataView.setUint8(address, R)
 
