@@ -46,31 +46,6 @@ class CPU {
 		this.sramDataView.setUint8(this.statusRegisterAddress, value)
 	}
 
-	private setAritheticStatusRegisterBits(Rd: number, Rr: number, R: number) {
-		const Rd3 = (Rd & (1 << 3)) >> 3
-		const Rr3 = (Rr & (1 << 3)) >> 3
-		const R3 = (R & (1 << 3)) >> 3
-
-		const Rd7 = (Rd & (1 << 7)) >> 7
-		const Rr7 = (Rr & (1 << 7)) >> 7
-		const R7 = (R & (1 << 7)) >> 7
-
-		const cBit = (Rd7 & Rr7) | (Rr7 & ~R7) | (~R7 & Rd7)
-		const zBit = Number(R === 0)
-		const nBit = R7
-		const vBit = (Rd7 & Rr7 & ~R7) | (~Rd7 & ~Rr7 & R7)
-		const sBit = nBit ^ vBit
-		const hBit = (Rd3 & Rr3) | (Rr3 & ~R3) | (~R3 & Rd3)
-
-		this.statusRegister &= 0b11000000 // Clear bits that are going to be set
-		this.statusRegister |= cBit
-		this.statusRegister |= zBit << 1
-		this.statusRegister |= nBit << 2
-		this.statusRegister |= vBit << 3
-		this.statusRegister |= sBit << 4
-		this.statusRegister |= hBit << 5
-	}
-
 	public executeInstruction() {
 		// Each instruction is either 16 bit or 32 bit.
 		const opcode = this.flashDataView.getUint16(this.programCounter, true)
@@ -93,7 +68,29 @@ class CPU {
 
 			this.sramDataView.setUint8(registerD, R)
 
-			this.setAritheticStatusRegisterBits(Rd, Rr, R)
+			// Set status register bits
+			const Rd3 = (Rd & (1 << 3)) >> 3
+			const Rr3 = (Rr & (1 << 3)) >> 3
+			const R3 = (R & (1 << 3)) >> 3
+
+			const Rd7 = (Rd & (1 << 7)) >> 7
+			const Rr7 = (Rr & (1 << 7)) >> 7
+			const R7 = (R & (1 << 7)) >> 7
+
+			const cBit = (Rd7 & Rr7) | (Rr7 & ~R7) | (~R7 & Rd7)
+			const zBit = Number(R === 0)
+			const nBit = R7
+			const vBit = (Rd7 & Rr7 & ~R7) | (~Rd7 & ~Rr7 & R7)
+			const sBit = nBit ^ vBit
+			const hBit = (Rd3 & Rr3) | (Rr3 & ~R3) | (~R3 & Rd3)
+
+			this.statusRegister &= 0b11000000 // Clear bits that are going to be set
+			this.statusRegister |= cBit
+			this.statusRegister |= zBit << 1
+			this.statusRegister |= nBit << 2
+			this.statusRegister |= vBit << 3
+			this.statusRegister |= sBit << 4
+			this.statusRegister |= hBit << 5
 
 			this.programCounter += 2
 			this.cycles += 1
@@ -112,7 +109,29 @@ class CPU {
 
 			this.sramDataView.setUint8(registerD, R)
 
-			this.setAritheticStatusRegisterBits(Rd, Rr, R)
+			// Set status register bits
+			const Rd3 = (Rd & (1 << 3)) >> 3
+			const Rr3 = (Rr & (1 << 3)) >> 3
+			const R3 = (R & (1 << 3)) >> 3
+
+			const Rd7 = (Rd & (1 << 7)) >> 7
+			const Rr7 = (Rr & (1 << 7)) >> 7
+			const R7 = (R & (1 << 7)) >> 7
+
+			const cBit = (Rd7 & Rr7) | (Rr7 & ~R7) | (~R7 & Rd7)
+			const zBit = Number(R === 0)
+			const nBit = R7
+			const vBit = (Rd7 & Rr7 & ~R7) | (~Rd7 & ~Rr7 & R7)
+			const sBit = nBit ^ vBit
+			const hBit = (Rd3 & Rr3) | (Rr3 & ~R3) | (~R3 & Rd3)
+
+			this.statusRegister &= 0b11000000 // Clear bits that are going to be set
+			this.statusRegister |= cBit
+			this.statusRegister |= zBit << 1
+			this.statusRegister |= nBit << 2
+			this.statusRegister |= vBit << 3
+			this.statusRegister |= sBit << 4
+			this.statusRegister |= hBit << 5
 
 			this.programCounter += 2
 			this.cycles += 1
@@ -125,16 +144,16 @@ class CPU {
 
 			const address = d * 2 + 24
 
-			const value = this.sramDataView.getUint16(address, true)
+			const Rd = this.sramDataView.getUint16(address, true)
 
-			const sum = value + K
+			const sum = Rd + K
 			const R = sum & 0xffff // 16 bit overflow
 
 			this.sramDataView.setUint16(address, R, true)
 
 			// Set status register bits
 			const R15 = (R & (1 << 15)) >> 15
-			const Rdh7 = (value & (1 << 15)) >> 15 // 7th bit (counting from) of high byte means 15th bit of 16 bit value or the last/sign bit.
+			const Rdh7 = (Rd & (1 << 15)) >> 15 // 7th bit (counting from) of high byte means 15th bit of 16 bit value or the last/sign bit.
 
 			const cBit = ~R15 & Rdh7
 			const zBit = Number(R === 0)
@@ -151,12 +170,210 @@ class CPU {
 
 			this.programCounter += 2
 			this.cycles += 2
+		} else if ((opcode & 0b1111110000000000) >> 10 === 0b000110) {
+			// SUB, 0001 10rd dddd rrrr
+			console.log('SUB')
+
+			const registerD = (opcode & 0b0000000111110000) >> 4
+			const registerR = ((opcode & 0b0000001000000000) >> 5) | (opcode & 0b0000000000001111)
+
+			const Rd = this.sramDataView.getUint8(registerD)
+			const Rr = this.sramDataView.getUint8(registerR)
+
+			const result = Rd - Rr
+			const R = result & 255 // 8 bit overflow
+
+			this.sramDataView.setUint8(registerD, R)
+
+			// Set status register bits
+			const Rd3 = (Rd & (1 << 3)) >> 3
+			const Rr3 = (Rr & (1 << 3)) >> 3
+			const R3 = (R & (1 << 3)) >> 3
+
+			const Rd7 = (Rd & (1 << 7)) >> 7
+			const Rr7 = (Rr & (1 << 7)) >> 7
+			const R7 = (R & (1 << 7)) >> 7
+
+			const cBit = (~Rd7 & Rr7) | (Rr7 & R7) | (R7 & ~Rd7)
+			const zBit = Number(R === 0)
+			const nBit = R7
+			const vBit = (Rd7 & ~Rr7 & ~R7) | (~Rd7 & Rr7 & R7)
+			const sBit = nBit ^ vBit
+			const hBit = (~Rd3 & Rr3) | (Rr3 & R3) | (R3 & ~Rd3)
+
+			this.statusRegister &= 0b11000000 // Clear bits that are going to be set
+			this.statusRegister |= cBit
+			this.statusRegister |= zBit << 1
+			this.statusRegister |= nBit << 2
+			this.statusRegister |= vBit << 3
+			this.statusRegister |= sBit << 4
+			this.statusRegister |= hBit << 5
+
+			this.programCounter += 2
+			this.cycles += 1
+		} else if ((opcode & 0b1111000000000000) >> 12 === 0b0101) {
+			// SUBI, 0101 KKKK dddd KKKK
+			console.log('SUBI')
+
+			const registerD = (opcode & 0b0000000011110000) >> 4
+			const K = ((opcode & 0b0000111100000000) >> 4) | (opcode & 0b0000000000001111)
+
+			// Add 16 because SUB can only work on the last 16 general purpose registers.
+			const address = registerD + 16
+
+			const Rd = this.sramDataView.getUint8(address)
+
+			const result = Rd - K
+			const R = result & 255 // 8 bit overflow
+
+			this.sramDataView.setUint8(address, R)
+
+			// Set status register bits
+			const Rd3 = (Rd & (1 << 3)) >> 3
+			const K3 = (K & (1 << 3)) >> 3
+			const R3 = (R & (1 << 3)) >> 3
+
+			const Rd7 = (Rd & (1 << 7)) >> 7
+			const K7 = (K & (1 << 7)) >> 7
+			const R7 = (R & (1 << 7)) >> 7
+
+			const cBit = (~Rd7 & K7) | (K7 & R7) | (R7 & ~Rd7)
+			const zBit = Number(R === 0)
+			const nBit = R7
+			const vBit = (Rd7 & ~K7 & ~R7) | (~Rd7 & K7 & R7)
+			const sBit = nBit ^ vBit
+			const hBit = (~Rd3 & K3) | (K3 & R3) | (R3 & ~Rd3)
+
+			this.statusRegister &= 0b11000000 // Clear bits that are going to be set
+			this.statusRegister |= cBit
+			this.statusRegister |= zBit << 1
+			this.statusRegister |= nBit << 2
+			this.statusRegister |= vBit << 3
+			this.statusRegister |= sBit << 4
+			this.statusRegister |= hBit << 5
+
+			this.programCounter += 2
+			this.cycles += 1
+		} else if ((opcode & 0b1111110000000000) >> 10 === 0b000010) {
+			// SBC, 0000 10rd dddd rrrr
+			console.log('SBC')
+
+			const registerD = (opcode & 0b0000000111110000) >> 4
+			const registerR = ((opcode & 0b0000001000000000) >> 5) | (opcode & 0b0000000000001111)
+
+			const Rd = this.sramDataView.getUint8(registerD)
+			const Rr = this.sramDataView.getUint8(registerR)
+
+			const result = Rd - Rr - (this.statusRegister & 0b00000001) // Carry status bit
+			const R = result & 255 // 8 bit overflow
+
+			this.sramDataView.setUint8(registerD, R)
+
+			// Set status register bits
+			const Rd3 = (Rd & (1 << 3)) >> 3
+			const Rr3 = (Rr & (1 << 3)) >> 3
+			const R3 = (R & (1 << 3)) >> 3
+
+			const Rd7 = (Rd & (1 << 7)) >> 7
+			const Rr7 = (Rr & (1 << 7)) >> 7
+			const R7 = (R & (1 << 7)) >> 7
+
+			const cBit = (~Rd7 & Rr7) | (Rr7 & R7) | (R7 & ~Rd7)
+			const zBit = Number(R === 0)
+			const nBit = R7
+			const vBit = (Rd7 & ~Rr7 & ~R7) | (~Rd7 & Rr7 & R7)
+			const sBit = nBit ^ vBit
+			const hBit = (~Rd3 & Rr3) | (Rr3 & R3) | (R3 & ~Rd3)
+
+			this.statusRegister &= 0b11000000 // Clear bits that are going to be set
+			this.statusRegister |= cBit
+			this.statusRegister |= zBit << 1
+			this.statusRegister |= nBit << 2
+			this.statusRegister |= vBit << 3
+			this.statusRegister |= sBit << 4
+			this.statusRegister |= hBit << 5
+
+			this.programCounter += 2
+			this.cycles += 1
+		} else if ((opcode & 0b1111000000000000) >> 12 === 0b0100) {
+			// SBCI, 0100 KKKK dddd KKKK
+			console.log('SBCI')
+
+			const registerD = (opcode & 0b0000000011110000) >> 4
+			const K = ((opcode & 0b0000111100000000) >> 4) | (opcode & 0b0000000000001111)
+
+			// Add 16 because SUB can only work on the last 16 general purpose registers.
+			const address = registerD + 16
+
+			const Rd = this.sramDataView.getUint8(address)
+
+			const result = Rd - K - (this.statusRegister & 0b00000001) // Carry status bit
+			const R = result & 255 // 8 bit overflow
+
+			this.sramDataView.setUint8(address, R)
+
+			// Set status register bits
+			const Rd3 = (Rd & (1 << 3)) >> 3
+			const K3 = (K & (1 << 3)) >> 3
+			const R3 = (R & (1 << 3)) >> 3
+
+			const Rd7 = (Rd & (1 << 7)) >> 7
+			const K7 = (K & (1 << 7)) >> 7
+			const R7 = (R & (1 << 7)) >> 7
+
+			const cBit = (~Rd7 & K7) | (K7 & R7) | (R7 & ~Rd7)
+			const zBit = Number(R === 0)
+			const nBit = R7
+			const vBit = (Rd7 & ~K7 & ~R7) | (~Rd7 & K7 & R7)
+			const sBit = nBit ^ vBit
+			const hBit = (~Rd3 & K3) | (K3 & R3) | (R3 & ~Rd3)
+
+			this.statusRegister &= 0b11000000 // Clear bits that are going to be set
+			this.statusRegister |= cBit
+			this.statusRegister |= zBit << 1
+			this.statusRegister |= nBit << 2
+			this.statusRegister |= vBit << 3
+			this.statusRegister |= sBit << 4
+			this.statusRegister |= hBit << 5
+
+			this.programCounter += 2
+			this.cycles += 1
+		} else if ((opcode & 0b1111111100000000) >> 8 === 0b10010111) {
+			// SBIW, 1001 0111 KKdd KKKK
+			console.log('SBIW')
+
+			const d = (opcode & 0b0000000000110000) >> 4
+			const K = ((opcode & 0b0000000011000000) >> 2) | (opcode & 0b0000000000001111)
+
+			const address = d * 2 + 24
+
+			const Rd = this.sramDataView.getUint16(address, true)
+
+			const result = Rd - K
+			const R = result & 0xffff // 16 bit overflow
+
+			this.sramDataView.setUint16(address, R, true)
+
+			// Set status register bits
+			const R15 = (R & (1 << 15)) >> 15
+			const Rdh7 = (Rd & (1 << 15)) >> 15 // 7th bit (counting from) of high byte means 15th bit of 16 bit value or the last/sign bit.
+
+			const cBit = R15 & ~Rdh7
+			const zBit = Number(R === 0)
+			const nBit = R15
+			const vBit = ~R15 & Rdh7
+			const sBit = nBit ^ vBit
+
+			this.statusRegister &= 0b11100000 // Clear bits that are going to be set
+			this.statusRegister |= cBit
+			this.statusRegister |= zBit << 1
+			this.statusRegister |= nBit << 2
+			this.statusRegister |= vBit << 3
+			this.statusRegister |= sBit << 4
+
+			this.programCounter += 2
+			this.cycles += 2
 		}
-		// SUB
-		// SUBI
-		// SBC
-		// SBCI
-		// SBIW
 		// AND
 		// ANDI
 		// OR
@@ -189,7 +406,6 @@ class CPU {
 			const offsetSigned = (offset12bit << 20) >> 20
 
 			this.programCounter += offsetSigned * 2 + 2
-
 			this.cycles += 2
 		}
 		// IJMP
