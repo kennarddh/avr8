@@ -472,7 +472,6 @@ class CPU {
 			this.programCounter += 2
 			this.cycles += 1
 		}
-		// LDI
 		// LD, X
 		// LD, X+
 		// LD, -X
