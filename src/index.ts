@@ -373,16 +373,235 @@ class CPU {
 
 			this.programCounter += 2
 			this.cycles += 2
+		} else if ((opcode & 0b1111110000000000) >> 10 === 0b001000) {
+			// AND, 0010 00rd dddd rrrr
+			console.log('AND')
+
+			const registerD = (opcode & 0b0000000111110000) >> 4
+			const registerR = ((opcode & 0b0000001000000000) >> 5) | (opcode & 0b0000000000001111)
+
+			const Rd = this.sramDataView.getUint8(registerD)
+			const Rr = this.sramDataView.getUint8(registerR)
+
+			const result = Rd & Rr
+			const R = result & 0xff // 8 bit overflow
+
+			this.sramDataView.setUint8(registerD, R)
+
+			// Set status register bits
+			const R7 = (R & (1 << 7)) >> 7
+
+			const zBit = Number(R === 0)
+			const nBit = R7
+			const vBit = 0
+			const sBit = nBit ^ vBit
+
+			this.statusRegister &= 0b11100001 // Clear bits that are going to be set
+			// V bit is intentionally cleared but not set because it is always 0 after this instruction
+			this.statusRegister |= zBit << 1
+			this.statusRegister |= nBit << 2
+			this.statusRegister |= sBit << 4
+
+			this.programCounter += 2
+			this.cycles += 1
+		} else if ((opcode & 0b1111000000000000) >> 12 === 0b0111) {
+			// ANDI, 0111 KKKK dddd KKKK
+			console.log('ANDI')
+
+			const registerD = (opcode & 0b0000000011110000) >> 4
+			const K = ((opcode & 0b0000111100000000) >> 4) | (opcode & 0b0000000000001111)
+
+			// Add 16 because ANDI can only work on the last 16 general purpose registers.
+			const address = registerD + 16
+
+			const Rd = this.sramDataView.getUint8(address)
+
+			const result = Rd & K
+			const R = result & 0xff // 8 bit overflow
+
+			this.sramDataView.setUint8(address, R)
+
+			// Set status register bits
+			const R7 = (R & (1 << 7)) >> 7
+
+			const zBit = Number(R === 0)
+			const nBit = R7
+			const vBit = 0
+			const sBit = nBit ^ vBit
+
+			this.statusRegister &= 0b11100001 // Clear bits that are going to be set
+			// V bit is intentionally cleared but not set because it is always 0 after this instruction
+			this.statusRegister |= zBit << 1
+			this.statusRegister |= nBit << 2
+			this.statusRegister |= vBit << 3
+			this.statusRegister |= sBit << 4
+
+			this.programCounter += 2
+			this.cycles += 1
+		} else if ((opcode & 0b1111110000000000) >> 10 === 0b001010) {
+			// OR, 0010 10rd dddd rrrr
+			console.log('OR')
+
+			const registerD = (opcode & 0b0000000111110000) >> 4
+			const registerR = ((opcode & 0b0000001000000000) >> 5) | (opcode & 0b0000000000001111)
+
+			const Rd = this.sramDataView.getUint8(registerD)
+			const Rr = this.sramDataView.getUint8(registerR)
+
+			const result = Rd | Rr
+			const R = result & 0xff // 8 bit overflow
+
+			this.sramDataView.setUint8(registerD, R)
+
+			// Set status register bits
+			const R7 = (R & (1 << 7)) >> 7
+
+			const zBit = Number(R === 0)
+			const nBit = R7
+			const vBit = 0
+			const sBit = nBit ^ vBit
+
+			this.statusRegister &= 0b11100001 // Clear bits that are going to be set
+			// V bit is intentionally cleared but not set because it is always 0 after this instruction
+			this.statusRegister |= zBit << 1
+			this.statusRegister |= nBit << 2
+			this.statusRegister |= sBit << 4
+
+			this.programCounter += 2
+			this.cycles += 1
+		} else if ((opcode & 0b1111000000000000) >> 12 === 0b0110) {
+			// ORI, 0110 KKKK dddd KKKK
+			console.log('ORI')
+
+			const registerD = (opcode & 0b0000000011110000) >> 4
+			const K = ((opcode & 0b0000111100000000) >> 4) | (opcode & 0b0000000000001111)
+
+			// Add 16 because ORI can only work on the last 16 general purpose registers.
+			const address = registerD + 16
+
+			const Rd = this.sramDataView.getUint8(address)
+
+			const result = Rd | K
+			const R = result & 0xff // 8 bit overflow
+
+			this.sramDataView.setUint8(address, R)
+
+			// Set status register bits
+			const R7 = (R & (1 << 7)) >> 7
+
+			const zBit = Number(R === 0)
+			const nBit = R7
+			const vBit = 0
+			const sBit = nBit ^ vBit
+
+			this.statusRegister &= 0b11100001 // Clear bits that are going to be set
+			// V bit is intentionally cleared but not set because it is always 0 after this instruction
+			this.statusRegister |= zBit << 1
+			this.statusRegister |= nBit << 2
+			this.statusRegister |= vBit << 3
+			this.statusRegister |= sBit << 4
+
+			this.programCounter += 2
+			this.cycles += 1
+		} else if ((opcode & 0b1111110000000000) >> 10 === 0b001001) {
+			// EOR, 0010 01rd dddd rrrr
+			console.log('EOR')
+
+			const registerD = (opcode & 0b0000000111110000) >> 4
+			const registerR = ((opcode & 0b0000001000000000) >> 5) | (opcode & 0b0000000000001111)
+
+			const Rd = this.sramDataView.getUint8(registerD)
+			const Rr = this.sramDataView.getUint8(registerR)
+
+			const result = Rd ^ Rr
+			const R = result & 0xff // 8 bit overflow
+
+			this.sramDataView.setUint8(registerD, R)
+
+			// Set status register bits
+			const R7 = (R & (1 << 7)) >> 7
+
+			const zBit = Number(R === 0)
+			const nBit = R7
+			const vBit = 0
+			const sBit = nBit ^ vBit
+
+			this.statusRegister &= 0b11100001 // Clear bits that are going to be set
+			// V bit is intentionally cleared but not set because it is always 0 after this instruction
+			this.statusRegister |= zBit << 1
+			this.statusRegister |= nBit << 2
+			this.statusRegister |= sBit << 4
+
+			this.programCounter += 2
+			this.cycles += 1
+		} else if ((opcode & 0b1111110000001111) === 0b1001010000000000) {
+			// COM, 1001 010d dddd 0000
+			console.log('COM')
+
+			const registerD = (opcode & 0b0000000111110000) >> 4
+
+			const Rd = this.sramDataView.getUint8(registerD)
+
+			const result = 0xff - Rd
+			const R = result & 0xff // 8 bit overflow
+
+			this.sramDataView.setUint8(registerD, R)
+
+			// Set status register bits
+			const R7 = (R & (1 << 7)) >> 7
+
+			const cBit = 1
+			const zBit = Number(R === 0)
+			const nBit = R7
+			const vBit = 0
+			const sBit = nBit ^ vBit
+
+			this.statusRegister &= 0b11100000 // Clear bits that are going to be set
+			// V bit is intentionally cleared but not set because it is always 0 after this instruction
+			this.statusRegister |= cBit
+			this.statusRegister |= zBit << 1
+			this.statusRegister |= nBit << 2
+			this.statusRegister |= sBit << 4
+
+			this.programCounter += 2
+			this.cycles += 1
+		} else if ((opcode & 0b1111110000001111) === 0b1001010000000001) {
+			// NEG, 1001 010d dddd 0001
+			console.log('NEG')
+
+			const registerD = (opcode & 0b0000000111110000) >> 4
+
+			const Rd = this.sramDataView.getUint8(registerD)
+
+			const result = 0x00 - Rd
+			const R = result & 0xff // 8 bit overflow
+
+			this.sramDataView.setUint8(registerD, R)
+
+			// Set status register bits
+			const R3 = (R & (1 << 3)) >> 3
+			const Rd3 = (Rd & (1 << 3)) >> 3
+
+			const R7 = (R & (1 << 7)) >> 7
+
+			const cBit = Number(R !== 0)
+			const zBit = Number(R === 0)
+			const nBit = R7
+			const vBit = Number(R === 0x80)
+			const sBit = nBit ^ vBit
+			const hBit = R3 | Rd3
+
+			this.statusRegister &= 0b11000000 // Clear bits that are going to be set
+			this.statusRegister |= cBit
+			this.statusRegister |= zBit << 1
+			this.statusRegister |= nBit << 2
+			this.statusRegister |= vBit << 3
+			this.statusRegister |= sBit << 4
+			this.statusRegister |= hBit << 5
+
+			this.programCounter += 2
+			this.cycles += 1
 		}
-		// TODO: AND
-		// TODO: ANDI
-		// TODO: OR
-		// TODO: ORI
-		// TODO: EOR
-		// TODO: COM
-		// TODO: NEG
-		// TODO: SBR
-		// TODO: CBR
 		// TODO: INC
 		// TODO: DEC
 		// TODO: MUL
