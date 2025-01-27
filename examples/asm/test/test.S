@@ -4,9 +4,9 @@
 .global main
 
 main:
-	ldi r24, 2
-	ldi r25, 3
-	neg r24
+	ldi r16, -60
+	ldi r17, 100
+	mulsu r16, r17
 
 _end:
     rjmp _end ; hang forever

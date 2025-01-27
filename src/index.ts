@@ -659,13 +659,195 @@ class CPU {
 
 			this.programCounter += 2
 			this.cycles += 1
+		} else if ((opcode & 0b1111110000000000) >> 10 === 0b100111) {
+			// MUL, 1001 11rd dddd rrrr
+			console.log('MUL')
+
+			const registerD = (opcode & 0b0000000111110000) >> 4
+			const registerR = ((opcode & 0b0000001000000000) >> 5) | (opcode & 0b0000000000001111)
+
+			const Rd = this.sramDataView.getUint8(registerD)
+			const Rr = this.sramDataView.getUint8(registerR)
+
+			const product = Rd * Rr
+			const R = product & 0xffff // 16 bit overflow
+
+			// MUL always places the 16 bit output in R1:R0 register pair.
+			this.sramDataView.setUint16(0, R, true)
+
+			// Set status register bits
+			const R15 = (R & (1 << 15)) >> 15
+
+			const cBit = R15
+			const zBit = Number(R === 0)
+
+			this.statusRegister &= 0b11111100 // Clear bits that are going to be set
+			this.statusRegister |= cBit
+			this.statusRegister |= zBit << 1
+
+			this.programCounter += 2
+			this.cycles += 2
+		} else if ((opcode & 0b1111111100000000) >> 8 === 0b00000010) {
+			// MULS, 0000 0010 dddd rrrr
+			console.log('MULS')
+
+			const registerD = (opcode & 0b0000000011110000) >> 4
+			const registerR = opcode & 0b0000000000001111
+
+			// Add 16 because MULS can only work on the last 16 general purpose registers.
+			const addressD = registerD + 16
+			const addressR = registerR + 16
+
+			const Rd = this.sramDataView.getInt8(addressD)
+			const Rr = this.sramDataView.getInt8(addressR)
+
+			const product = Rd * Rr
+			const R = product & 0xffff // 16 bit overflow
+
+			// MULS always places the 16 bit output in R1:R0 register pair.
+			this.sramDataView.setInt16(0, R, true)
+
+			// Set status register bits
+			const R15 = (R & (1 << 15)) >> 15
+
+			const cBit = R15
+			const zBit = Number(R === 0)
+
+			this.statusRegister &= 0b11111100 // Clear bits that are going to be set
+			this.statusRegister |= cBit
+			this.statusRegister |= zBit << 1
+
+			this.programCounter += 2
+			this.cycles += 2
+		} else if ((opcode & 0b1111111110001000) === 0b0000001100000000) {
+			// MULSU, 0000 0011 0ddd 0rrr
+			console.log('MULSU')
+
+			const registerD = (opcode & 0b0000000001110000) >> 4
+			const registerR = opcode & 0b0000000000000111
+
+			// Add 16 because MULSU can only work on 16th to 23rd general purpose registers.
+			const addressD = registerD + 16
+			const addressR = registerR + 16
+
+			const Rd = this.sramDataView.getInt8(addressD)
+			const Rr = this.sramDataView.getUint8(addressR)
+
+			const product = Rd * Rr
+			const R = product & 0xffff // 16 bit overflow
+
+			// MULSU always places the 16 bit output in R1:R0 register pair.
+			this.sramDataView.setInt16(0, R, true)
+
+			// Set status register bits
+			const R15 = (R & (1 << 15)) >> 15
+
+			const cBit = R15
+			const zBit = Number(R === 0)
+
+			this.statusRegister &= 0b11111100 // Clear bits that are going to be set
+			this.statusRegister |= cBit
+			this.statusRegister |= zBit << 1
+
+			this.programCounter += 2
+			this.cycles += 2
+		} else if ((opcode & 0b1111111110001000) === 0b0000001100001000) {
+			// FMUL, 0000 0011 0ddd 1rrr
+			console.log('FMUL')
+
+			const registerD = (opcode & 0b0000000001110000) >> 4
+			const registerR = opcode & 0b0000000000000111
+
+			// Add 16 because FMUL can only work on 16th to 23rd general purpose registers.
+			const addressD = registerD + 16
+			const addressR = registerR + 16
+
+			const Rd = this.sramDataView.getUint8(addressD)
+			const Rr = this.sramDataView.getUint8(addressR)
+
+			const product = Rd * Rr
+			const R = (product << 1) & 0xffff // 16 bit overflow
+
+			// FMUL always places the 16 bit output in R1:R0 register pair.
+			this.sramDataView.setUint16(0, R, true)
+
+			// Set status register bits
+			const R15 = (product & (1 << 15)) >> 15 // Intentionally use the before left shifted value as stated in the datasheet.
+
+			const cBit = R15
+			const zBit = Number(R === 0)
+
+			this.statusRegister &= 0b11111100 // Clear bits that are going to be set
+			this.statusRegister |= cBit
+			this.statusRegister |= zBit << 1
+
+			this.programCounter += 2
+			this.cycles += 2
+		} else if ((opcode & 0b1111111110001000) === 0b0000001110000000) {
+			// FMULS, 0000 0011 1ddd 0rrr
+			console.log('FMULS')
+
+			const registerD = (opcode & 0b0000000001110000) >> 4
+			const registerR = opcode & 0b0000000000000111
+
+			// Add 16 because FMULS can only work on 16th to 23rd general purpose registers.
+			const addressD = registerD + 16
+			const addressR = registerR + 16
+
+			const Rd = this.sramDataView.getInt8(addressD)
+			const Rr = this.sramDataView.getInt8(addressR)
+
+			const product = Rd * Rr
+			const R = (product << 1) & 0xffff // 16 bit overflow
+
+			// FMULS always places the 16 bit output in R1:R0 register pair.
+			this.sramDataView.setInt16(0, R, true)
+
+			// Set status register bits
+			const R15 = (product & (1 << 15)) >> 15 // Intentionally use the before left shifted value as stated in the datasheet.
+
+			const cBit = R15
+			const zBit = Number(R === 0)
+
+			this.statusRegister &= 0b11111100 // Clear bits that are going to be set
+			this.statusRegister |= cBit
+			this.statusRegister |= zBit << 1
+
+			this.programCounter += 2
+			this.cycles += 2
+		} else if ((opcode & 0b1111111110001000) === 0b0000001110001000) {
+			// FMULSU, 0000 0011 1ddd 1rrr
+			console.log('FMULSU')
+
+			const registerD = (opcode & 0b0000000001110000) >> 4
+			const registerR = opcode & 0b0000000000000111
+
+			// Add 16 because FMULSU can only work on 16th to 23rd general purpose registers.
+			const addressD = registerD + 16
+			const addressR = registerR + 16
+
+			const Rd = this.sramDataView.getInt8(addressD)
+			const Rr = this.sramDataView.getUint8(addressR)
+
+			const product = Rd * Rr
+			const R = (product << 1) & 0xffff // 16 bit overflow
+
+			// FMULSU always places the 16 bit output in R1:R0 register pair.
+			this.sramDataView.setInt16(0, R, true)
+
+			// Set status register bits
+			const R15 = (product & (1 << 15)) >> 15 // Intentionally use the before left shifted value as stated in the datasheet.
+
+			const cBit = R15
+			const zBit = Number(R === 0)
+
+			this.statusRegister &= 0b11111100 // Clear bits that are going to be set
+			this.statusRegister |= cBit
+			this.statusRegister |= zBit << 1
+
+			this.programCounter += 2
+			this.cycles += 2
 		}
-		// TODO: MUL
-		// TODO: MULS
-		// TODO: MULSU
-		// TODO: FMUL
-		// TODO: FMULS
-		// TODO: FMULSU
 
 		// Branch Instructions
 		else if ((opcode & 0b1111000000000000) >> 12 === 0b1100) {
@@ -809,4 +991,4 @@ for (let i = 0; i < 3; i++) {
 }
 
 console.log(cpu.sram.slice(0, 32))
-console.log(new Uint16Array(cpu.sram.buffer).slice(12, 16))
+console.log(new Uint16Array(cpu.sram.buffer).slice(0, 16))
