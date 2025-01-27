@@ -385,9 +385,6 @@ class CPU {
 		// CBR
 		// INC
 		// DEC
-		// TST
-		// CLR
-		// SER
 		// MUL
 		// MULS
 		// MULSU
@@ -425,24 +422,6 @@ class CPU {
 		// SBIS
 		// BRBS
 		// BRBC
-		// BREQ
-		// BRNE
-		// BRCS
-		// BRCC
-		// BRSH
-		// BRLO
-		// BRMI
-		// BRPL
-		// BRGE
-		// BRLT
-		// BRHS
-		// BRHC
-		// BRTS
-		// BRTC
-		// BRVS
-		// BRVC
-		// BRIE
-		// BRID
 		// EIJMP
 		// EICALL
 
@@ -473,22 +452,7 @@ class CPU {
 		// BCLR
 		// BST
 		// BLD
-		// SEC
-		// CLC
-		// SEN
-		// CLN
-		// SEZ
-		// CLZ
 		// SEI
-		// CLI
-		// SES
-		// CLS
-		// SEV
-		// CLV
-		// SET
-		// CLT
-		// SEH
-		// CLH
 
 		// Data Transfer Instructions
 		// MOV
