@@ -11,7 +11,11 @@ class CPU {
 	// 6 of the 32 registers can be used as 3 16 bit general purpose registers
 	// Stack pointer as 2 8-bit registers in the I/O space. Numbers of bits used are implementation dependent. No SPH only SPL.
 
-	public sram = new Uint8Array(2 * 1048)
+	// 32 is the space taken by general purpose registers.
+	// 64 is the space taken by I/O registers.
+	// 160 is the space taken by extended I/O registers.
+	// 2 * 1048 is the size of the sram itself.
+	public sram = new Uint8Array(2 * 1048 + 32 + 64 + 160)
 	public sramDataView = new DataView(this.sram.buffer)
 	public flash = new Uint8Array(32 * 1048)
 	public flashDataView = new DataView(this.flash.buffer)
@@ -26,6 +30,10 @@ class CPU {
 
 		// Fill the rest of flash memory with 0xFF:
 		this.flash.fill(0xff, flashData.length)
+
+		// TODO: Not sure if stack pointer should be automatically initialized.
+		// Stack is located at the end of the sram.
+		this.stackPointer = this.sram.length - 1
 	}
 
 	get stackPointer() {
@@ -857,8 +865,10 @@ class CPU {
 			const offset12bit = opcode & 0b0000111111111111
 
 			// Bitwise sign extension. Convert unsigned into signed.
+			// 20 is from 32 - 12. 12 is the length of k. 32 is because javascript works on 32 bit number for bitwise operation.
 			const offsetSigned = (offset12bit << 20) >> 20
 
+			// Multiplied by 2 because k is in word not byte
 			this.programCounter += offsetSigned * 2 + 2
 			this.cycles += 2
 		}
@@ -877,7 +887,51 @@ class CPU {
 		// TODO: SBRS
 		// TODO: SBIC
 		// TODO: SBIS
-		// TODO: BRBS
+		else if ((opcode & 0b1111110000000000) >> 10 === 0b111100) {
+			// BRBS, 1111 00kk kkkk ksss
+			console.log('BRBS')
+
+			const s = opcode & 0b0000000000000111
+
+			const bit = (this.statusRegister & (1 << s)) >> s
+
+			if (bit === 1) {
+				const k = (opcode & 0b0000001111111000) >> 3
+
+				// Bitwise sign extension. Convert unsigned into signed.
+				// 25 is from 32 - 7. 7 is the length of k. 32 is because javascript works on 32 bit number for bitwise operation.
+				const kSigned = (k << 25) >> 25
+
+				// Multiplied by 2 because k is in word not byte
+				this.programCounter += kSigned * 2 + 2
+				this.cycles += 2
+			} else {
+				this.programCounter += 2
+				this.cycles += 1
+			}
+		} else if ((opcode & 0b1111110000000000) >> 10 === 0b111101) {
+			// BRBC, 1111 01kk kkkk ksss
+			console.log('BRBC')
+
+			const s = opcode & 0b0000000000000111
+
+			const bit = (this.statusRegister & (1 << s)) >> s
+
+			if (bit === 0) {
+				const k = (opcode & 0b0000001111111000) >> 3
+
+				// Bitwise sign extension. Convert unsigned into signed.
+				// 25 is from 32 - 7. 7 is the length of k. 32 is because javascript works on 32 bit number for bitwise operation.
+				const kSigned = (k << 25) >> 25
+
+				// Multiplied by 2 because k is in word not byte
+				this.programCounter += kSigned * 2 + 2
+				this.cycles += 2
+			} else {
+				this.programCounter += 2
+				this.cycles += 2
+			}
+		}
 		// TODO: BRBC
 		// TODO: EIJMP
 		// TODO: EICALL
@@ -985,10 +1039,25 @@ const { data } = intelHex.parse(exampleHex)
 
 const cpu = new CPU(data)
 
-for (let i = 0; i < 3; i++) {
-	console.log(`Cycle ${cpu.cycles}`)
-	cpu.executeInstruction()
-}
+const realConsoleLog = console.log
+console.log = () => undefined
 
-console.log(cpu.sram.slice(0, 32))
-console.log(new Uint16Array(cpu.sram.buffer).slice(0, 16))
+const deltaInstructionDebug = 1
+
+for (let i = 0; i < 3; i++) {
+	if (i % deltaInstructionDebug === 0) {
+		console.log = realConsoleLog
+	}
+
+	cpu.executeInstruction()
+
+	if (i % deltaInstructionDebug === 0) {
+		console.log = () => undefined
+
+		realConsoleLog(`Cycle ${cpu.cycles}`)
+
+		realConsoleLog('General registers', cpu.sram.slice(0, 32))
+		realConsoleLog('I/O registers', cpu.sram.slice(32, 32 + 64))
+		// realConsoleLog(new Uint16Array(cpu.sram.buffer).slice(0, 16))
+	}
+}

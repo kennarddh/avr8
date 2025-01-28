@@ -4,9 +4,8 @@
     sbi io(DDRB), 5  ; set PB5 as output
 loop:
     sbi io(PINB), 5  ; toggle PB5
-    ldi r26, 49      ; delay for 49 * 2^16 * 5 cycles
+    ldi r26, 2       ; delay
 delay:
-    sbiw r24, 1
-    sbci r26, 0
+    subi r26, 1
     brne delay
     rjmp loop
